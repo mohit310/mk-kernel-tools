@@ -73,7 +73,11 @@ function make_dtb {
 
 function make_zip {
 		echo "zip"
-		zip -r $RELEASE_DIR/updated-kernel.zip $ZIP_DIR/* 
+		curr_dir=${PWD}
+		cd $ZIP_DIR
+		rm -rf $RELEASE_DIR/mk-kernel.zip
+		zip -r9 $RELEASE_DIR/mk-kernel.zip *
+		cd $curr_dir
 }
 
 function make_bootimage {
