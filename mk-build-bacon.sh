@@ -11,7 +11,7 @@ clear
 # Resources
 THREAD="-j$(grep -c ^processor /proc/cpuinfo)"
 KERNEL="zImage"
-DTBIMAGE="${KERNEL}-dtb"
+DTBIMAGE="$KERNEL-dtb"
 DEFCONFIG="cyanogenmod_bacon_defconfig"
 
 # Kernel Details
@@ -28,25 +28,34 @@ export KBUILD_BUILD_USER=mk
 export KBUILD_BUILD_HOST=mk-cyan-kernel
 
 # Paths
-KERNEL_DIR=`pwd`
-RELEASE_DIR="${HOME}/mk-releases"
-TOOLS_DIR="${HOME}/arm-tools"
+KERNEL_DIR="${HOME}/android_kernel_oneplus_msm8974"
+TOOLS_DIR="${HOME}/mk-kernel-tools"
+ZIP_DIR="${TOOLS_DIR}/kernel-update-zip"
+ARM_TOOLS="${TOOLS_DIR}/arm-tools"
+RELEASE_DIR="${TOOLS_DIR}/release"
 MODULES_DIR="${RELEASE_DIR}/modules"
-ZIMAGE_DIR="${RELEASE_DIR}"
 
 # Functions
 function clean_all {
-		rm -rf $MODULES_DIR/*
-		rm -rf $RELEASE_DIR/$KERNEL
-		rm -rf $RELEASE_DIR/$DTBIMAGE
+		rm -rf "$ZIP_DIR/boot.img"
+		rm -rf "$RELEASE_DIR/$DTBIMAGE"
+		rm -rf "$RELEASE_DIR/$KERNEL"
+		rm -rf "$RELEASE_DIR/*.zip"
+		rm -rf "$MODULES_DIR/*"
+	        curr_dir=${PWD}
+		cd $KERNEL_DIR
 		make clean && make mrproper
+		cd $curr_dir
 }
 
 function make_kernel {
 		echo
+		curr_dir=${PWD}
+		cd $KERNEL_DIR
 		make $DEFCONFIG
 		make $THREAD
 		cp -vr $KERNEL_DIR/arch/arm/boot/$KERNEL $RELEASE_DIR
+		cd $curr_dir
 }
 
 function make_modules {
@@ -55,16 +64,22 @@ function make_modules {
 }
 
 function make_dtb {
-		$TOOLS_DIR/dtbToolCM -2 -o $RELEASE_DIR/$DTBIMAGE -s 2048 -p scripts/dtc/ arch/arm/boot/
+		curr_dir=${PWD}
+                cd $KERNEL_DIR
+		$ARM_TOOLS/dtbToolCM -2 -o $RELEASE_DIR/$DTBIMAGE -s 2048 -p scripts/dtc/ arch/arm/boot/
+		cd $curr_dir
 }
 
+
 function make_zip {
-		echo "N/A"
+		echo "zip"
+		zip -r $RELEASE_DIR/updated-kernel.zip $ZIP_DIR/* 
 }
 
 function make_bootimage {
-		$TOOLS_DIR/mkbootimg --kernel $RELEASE_DIR/$KERNEL --ramdisk $RELEASE_DIR/ramdisk --cmdline "console=ttyHSL0,115200,n8 androidboot.hardware=bacon user_debug=31 msm_rtb.filter=0x3F ehci-hcd.park=3 androidboot.bootdevice=msm_sdcc.1" --base 0x00000000 --pagesize 2048 --dt $RELEASE_DIR/$DTBIMAGE --ramdisk_offset 0x02000000 --tags_offset 0x01e00000 --output $RELEASE_DIR/bootimg
+		$ARM_TOOLS/mkbootimg --base 0 --pagesize 2048 --kernel_offset 0x00008000 --ramdisk_offset 0x02000000 --second_offset 0x00f00000 --tags_offset 0x01e00000 --cmdline 'console=ttyHSL0,115200,n8 androidboot.hardware=bacon user_debug=31 msm_rtb.filter=0x3F ehci-hcd.park=3 androidboot.bootdevice=msm_sdcc.1' --kernel $RELEASE_DIR/$KERNEL --ramdisk ramdisk/ramdisk.cpio.gz --dt $RELEASE_DIR/$DTBIMAGE -o $ZIP_DIR/boot.img
 }
+
 	
 
 DATE_START=$(date +"%s")
@@ -113,7 +128,6 @@ case "$dchoice" in
 	y|Y)
 		make_kernel
 		make_dtb
-		make_modules
 		make_bootimage
 		make_zip
 		break
