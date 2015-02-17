@@ -15,17 +15,17 @@ DTBIMAGE="$KERNEL-dtb"
 DEFCONFIG="cyanogenmod_bacon_defconfig"
 
 # Kernel Details
-BASE_NAME="MK-CYAN"
+BASE_NAME="mk-linaro-"
 BUILD_NO="1.0"
 BUILD_VER="$BASE_NAME$BUILD_NO"
 
 # Vars
 export LOCALVERSION=~`echo $BUILD_VER`
-export CROSS_COMPILE=${HOME}/android/prebuilts/gcc/linux-x86/arm/arm-eabi-4.8/bin/arm-eabi-
+export CROSS_COMPILE=${HOME}/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
 export ARCH=arm
 export SUBARCH=arm
 export KBUILD_BUILD_USER=mk
-export KBUILD_BUILD_HOST=mk-cyan-kernel
+export KBUILD_BUILD_HOST=mk-kernel
 
 # Paths
 KERNEL_DIR="${HOME}/android_kernel_oneplus_msm8974"
